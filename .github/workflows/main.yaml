@@ -43,13 +43,13 @@ jobs:
 
     - name: Build Docker image
       run: |
-        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/database-access-service
+        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/database-access-service                        
         docker build -t $REPOSITORY_URI:${{ env.VERSION }} .
         docker tag $REPOSITORY_URI:${{ env.VERSION }} $REPOSITORY_URI:latest
 
     - name: Push Docker image to Amazon ECR
       run: |
-        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/dev-app
+        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/database-access-service
         docker push $REPOSITORY_URI:${{ env.VERSION }}
         docker push $REPOSITORY_URI:latest
 
