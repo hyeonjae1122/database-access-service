@@ -45,14 +45,14 @@ jobs:
       env: 
         REPOSITORY_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/database-access-service
         VERSION: ${{ env.VERSION }}
-        run: |
-          docker buildx build \
-          --platform linux/amd64,linux/arm64 \
-          --push \
-          -t $REPOSITORY_URI:$VERSION \
-          -t $REPOSITORY_URI:latest \
-          .
-          docker tag $REPOSITORY_URI:$VERSION $REPOSITORY_URI:latest
+      run: |
+        docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --push \
+        -t $REPOSITORY_URI:$VERSION \
+        -t $REPOSITORY_URI:latest \
+        .
+        docker tag $REPOSITORY_URI:$VERSION $REPOSITORY_URI:latest
 
     - name: Push Docker image to Amazon ECR
       run: |
