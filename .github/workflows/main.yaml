@@ -51,8 +51,7 @@ jobs:
         --push \
         -t $REPOSITORY_URI:$VERSION \
         -t $REPOSITORY_URI:latest \
-        .
-        docker tag $REPOSITORY_URI:$VERSION $REPOSITORY_URI:latest
+        .        
 
     - name: Push Docker image to Amazon ECR
       run: |
