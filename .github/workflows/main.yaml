@@ -1,0 +1,70 @@
+ame: Docker Build and Push to AWS ECR
+
+on:
+  push:
+    branches:
+      - main  # Run when pushing to the main branch
+  pull_request:
+    branches:
+      - main  # Run on PRs to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Run the workflow on the latest Ubuntu runner
+
+    steps:
+    - name: Checkout code from repository
+      uses: actions/checkout@v2
+      with:
+        repository: 'hyeonjae1122/dev-app'
+        ref: 'main'
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Read VERSION file and set environment variable
+      id: read_version
+      run: |
+        VERSION=$(cat VERSION)
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "Version found: ${VERSION}"
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{vars.AWS_REGION}}  # 원하는 AWS 리전으로 변경
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build Docker image
+      run: |
+        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/database-access-service
+        docker build -t $REPOSITORY_URI:${{ env.VERSION }} .
+        docker tag $REPOSITORY_URI:${{ env.VERSION }} $REPOSITORY_URI:latest
+
+    - name: Push Docker image to Amazon ECR
+      run: |
+        REPOSITORY_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/dev-app
+        docker push $REPOSITORY_URI:${{ env.VERSION }}
+        docker push $REPOSITORY_URI:latest
+
+    # - name: Trigger ops-deploy repository
+    #   run: |
+    #     curl -X POST \
+    #       -H "Accept: application/vnd.github.v3+json" \
+    #       -H "Authorization: token ${{ secrets.WEBHOOK_PAT }}" \
+    #       https://api.github.com/repos/hyeonjae1122/ops-deploy/dispatches \
+    #       -d '{"event_type": "update-image", "client_payload": {"version": "${{ env.VERSION }}"}}'
+
+    - name: Success message
+      if: success()
+      run: echo "Docker image has been built and pushed successfully $REPOSITORY_URI:${{ env.VERSION }}"
+
+    - name: Failure message
+      if: failure()
+      run: echo "Pipeline failed. Please check the logs."
